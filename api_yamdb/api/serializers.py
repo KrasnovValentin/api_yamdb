@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from reviews.models import Review, Comment
+from django.shortcuts import get_object_or_404
 
 from users.models import User
 
@@ -47,3 +49,35 @@ class UpdateSelfSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio'
         )
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+    )
+
+    title = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name',
+    )
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'title', 'pub_date', 'score')
+        model = Review
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+    )
+    review = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='text',
+    )
+
+    class Meta:
+        fields = ('id', 'author', 'review', 'text', 'pub_date')
+        model = Comment
+        
