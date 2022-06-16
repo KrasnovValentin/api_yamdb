@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from users.models import User
@@ -10,15 +9,15 @@ class Category(models.Model):
     slug = models.SlugField()
 
     def __str__(self):
-        return f'{self.name}:{self.slug}'
+        return f'{self.name}'
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=200, blank=True)
-    slug = models.SlugField(unique=True)
+    name = models.CharField(max_length=200,)
+    slug = models.SlugField()
 
     def __str__(self):
-        return f'{self.name}:{self.slug}'
+        return f'{self.name}'
 
 
 class TitleGenres(models.Model):
@@ -56,30 +55,34 @@ class Title(models.Model):
         return self.name
 
 
-
 class Review(models.Model):
     text = models.TextField(
         verbose_name='Текст отзыва',
         help_text='Введите текст отзыва'
     )
-    pub_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата отзыва')
+    pub_date = models.DateTimeField(auto_now_add=True,
+                                    verbose_name='Дата отзыва')
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Автор отзыва')
-    title = models.ForeignKey(Titles,
+    title = models.ForeignKey(Title,
                               blank=True,
                               null=True,
                               on_delete=models.SET_NULL,
                               related_name='reviews',
                               verbose_name='Произведение',
-                              help_text='Произведение, к которому относится отзыв')
+                              help_text='Произведение, к '
+                                        'которому относится отзыв')
 
     score = models.IntegerField(
         verbose_name='Рейтинг',
-        validators=[MinValueValidator(1, message='Значение должно быть больше 1'),
-        MaxValueValidator(10, message='Значение должно быть меньше 10')])
+        validators=[MinValueValidator(1, message='Значение '
+                                                 'должно быть больше 1'),
+                    MaxValueValidator(10,
+                                      message='Значение должно быть '
+                                              'меньше 10')])
 
     def __str__(self):
         return self.text[:WORD_COUNT]
@@ -99,7 +102,7 @@ class Comment(models.Model):
         verbose_name='Текст комментария',
         help_text='Введите текст комметария'
     )
-    pud_date = models.DateTimeField(
+    pub_date = models.DateTimeField(
         auto_now_add=True, verbose_name='Дата комментария')
     author = models.ForeignKey(
         User,
@@ -112,7 +115,7 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Отзыв',
         help_text='Отзыв, к которому относится комментарий')
-    
+
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'

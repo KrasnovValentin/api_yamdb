@@ -1,55 +1,67 @@
 from datetime import datetime
 
-from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField, StringRelatedField
+from rest_framework.fields import SerializerMethodField, SlugField
 
 from reviews.models import Title, Category, Genre, Review, Comment
-from rest_framework.validators import UniqueTogetherValidator
-from django_filters.rest_framework import BaseInFilter, CharFilter, FilterSet
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 from users.models import User
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    # slug = SlugRelatedField(slug_field='slug', read_only=True)
 
     class Meta:
         fields = ('name', 'slug',)
         model = Category
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Category.objects.all(),
-                fields=('name', 'slug')
-            )
-        ]
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=Category.objects.all(),
+        #         fields=('name', 'slug')
+        #     )
+        # ]
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    # slug = SlugField(
+    #     max_length=100,
+    #     validators=[UniqueValidator(queryset=Genre.objects.all())]
+    # )
+
     class Meta:
         model = Genre
         fields = ('name', 'slug',)
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Genre.objects.all(),
-                fields=('name', 'slug')
-            )
-        ]
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=Genre.objects.all(),
+        #         fields=('name', 'slug')
+        #     ),
+        # ]
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
-    genre = GenreSerializer(read_only=True, many=True)
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+    rating = SerializerMethodField()
 
     class Meta:
         model = Title
-        fields = ('name', 'year', 'description', 'genre', 'category')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Title.objects.all(),
-                fields=('name', 'genre', 'category'),
-            )
-        ]
+        fields = ('id', 'name', 'year', 'rating', 'description',
+                  'genre', 'category')
+        read_only_fields = ('id', 'rating')
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=Title.objects.all(),
+        #         fields=('name', 'genre', 'category'),
+        #     )
+        # ]
+
+    def get_rating(self, obj):
+        return obj.reviews.aggregate(average=Avg('score'))['average']
+
+    # queryset = Title.objects.all().annotate(
+    #     Avg("reviews__score")
 
     def validate_year(self, year):
         if year > datetime.now().year:
@@ -59,7 +71,6 @@ class TitleSerializer(serializers.ModelSerializer):
         return year
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -67,6 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
         ref_name = 'ReadOnlyUsers'
+
 
 class SendConfirmationCodeSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254, required=True)
