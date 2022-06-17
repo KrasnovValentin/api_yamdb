@@ -6,25 +6,25 @@ from api_yamdb.settings import WORD_COUNT
 
 class Category(models.Model):
     name = models.CharField(max_length=200)
-    slug = models.SlugField()
+    slug = models.SlugField(verbose_name='URL slug', unique=True)
 
     def __str__(self):
         return f'{self.name}'
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=200,)
-    slug = models.SlugField()
+    name = models.CharField(max_length=200, )
+    slug = models.SlugField(verbose_name='URL slug', unique=True)
 
     def __str__(self):
         return f'{self.name}'
 
 
-class TitleGenres(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True,
-                              verbose_name='Жанр')
-    title = models.ForeignKey('Title', on_delete=models.SET_NULL, null=True,
-                              verbose_name='Название произведения')
+# class TitleGenres(models.Model):
+#     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True,
+#                               verbose_name='Жанр')
+#     title = models.ForeignKey('Title', on_delete=models.SET_NULL, null=True,
+#                               verbose_name='Название произведения')
 
 
 class Title(models.Model):
@@ -44,7 +44,7 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='TitleGenres',
+        # through='TitleGenres',
         related_name='titles',
         blank=True,
         verbose_name='Жанр',
@@ -84,7 +84,6 @@ class Review(models.Model):
                     MaxValueValidator(10,
                                       message='Значение должно быть '
                                               'меньше 10')])
-
 
     def __str__(self):
         return self.text[:WORD_COUNT]
