@@ -90,7 +90,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    filterset_fields = ('name',)
+    filterset_fields = ('slug',)
     search_fields = ['name', ]
     lookup_field = 'slug'
 
