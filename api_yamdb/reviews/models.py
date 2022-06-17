@@ -11,6 +11,11 @@ class Category(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+        ordering = ['name']
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=200, )
@@ -18,6 +23,11 @@ class Genre(models.Model):
 
     def __str__(self):
         return f'{self.name}'
+
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
+        ordering = ['name']
 
 
 class Title(models.Model):
@@ -42,6 +52,9 @@ class Title(models.Model):
         verbose_name='Жанр',
         help_text='Выберите жанр'
     )
+
+    class Meta:
+        ordering = ('year',)
 
     def __str__(self):
         return self.name
@@ -102,7 +115,7 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Автор комментария')
-    Review = models.ForeignKey(
+    review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments',

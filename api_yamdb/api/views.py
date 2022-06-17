@@ -195,6 +195,9 @@ def send_token(request):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    Класс задает отображение, создание и редактирование отзывов на  произведения (модель title).
+    """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [
@@ -214,6 +217,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """
+    Класс задает отображение, создание и редактирование отзывов на  произведения (модель review).
+    """
     serializer_class = CommentSerializer
     permission_classes = [
         AuthorOrAdminOrModeratorOrReadOnly
