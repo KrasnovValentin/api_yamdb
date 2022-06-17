@@ -61,6 +61,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     filterset_fields = ('slug',)
     search_fields = ['name', ]
     lookup_field = 'slug'
+    pagination_class = LimitOffsetPagination
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -75,6 +76,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filterset_fields = ('name',)
     search_fields = ['name', ]
     lookup_field = 'slug'
+    pagination_class = LimitOffsetPagination
 
     def retrieve(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
