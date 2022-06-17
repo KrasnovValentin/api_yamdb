@@ -31,44 +31,70 @@ from api.serializers import (TitleSerializer, GenreSerializer,
 
 class TitleViewSet(viewsets.ModelViewSet, APIView):
     """
-    Класс создает жанры произведений.
+    Класс задает отображение, создание и редактирование
+    записей о произведениях.
     """
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'year', 'category', 'genre')
     pagination_class = LimitOffsetPagination
 
-    def perform_create(self, serializer):
-        categ = self.request.data['category']
-        category_slug = categ.get('slug')
-        print(category_slug)
-        category = Category.objects.get(slug=category_slug)
-        genre_list = self.request.data['genre']
-        slug_list = [slg.get('slug') for slg in genre_list]
-        print(slug_list)
-        genre = Genre.objects.filter(slug__in=slug_list)
-        print(genre)
-        serializer.save(
-            category=category,
-            genre=genre,
-        )
+    # def create(self, request, *args, **kwargs):
+    #     print(f'self.request.data={request.data},{type(request.data)}')
+    #     catg = request.data.get('category')
+    #     print(f'type_catg={catg},{type(catg)}')
+    #     category_slug = catg.get('slug')
+    #     print(f'category_slug={category_slug}')
+    #     category = Category.objects.get(slug=category_slug)
+    #     genre_list = request.data.get('genre')
+    #     slug_list = [slg.get('slug') for slg in genre_list]
+    #     print(f'slug_list={slug_list}')
+    #     genre = Genre.objects.filter(slug__in=slug_list)
+    #     print(f'genre={genre}')
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save(
+    #         category=category,
+    #         genre=genre,
+    #     )
+    #     headers = self.get_success_headers(serializer.data)
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED,
+    #                     headers=headers)
+    #
+    # def perform_create(self, serializer):
+    #     pass
 
-    def partial_update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data,
-                                         partial=partial)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        if getattr(instance, '_prefetched_objects_cache', None):
-            instance._prefetched_objects_cache = {}
-        return Response(serializer.data)
+    # def perform_create(self, serializer):
+    #     categ = self.request.data['category']
+    #     category_slug = categ.get('slug')
+    #     print(category_slug)
+    #     category = Category.objects.get(slug=category_slug)
+    #     genre_list = self.request.data['genre']
+    #     slug_list = [slg.get('slug') for slg in genre_list]
+    #     print(slug_list)
+    #     genre = Genre.objects.filter(slug__in=slug_list)
+    #     print(genre)
+    #     serializer.save(
+    #         category=category,
+    #         genre=genre,
+    #     )
 
-    def perform_update(self, serializer):
-        pass
+    # def partial_update(self, request, *args, **kwargs):
+    #     kwargs['partial'] = True
+    #     partial = kwargs.pop('partial', False)
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance, data=request.data,
+    #                                      partial=partial)
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+    #     if getattr(instance, '_prefetched_objects_cache', None):
+    #         instance._prefetched_objects_cache = {}
+    #     return Response(serializer.data)
+    #
+    # def perform_update(self, serializer):
+    #     pass
 
 
 class GenreViewSet(mixins.CreateModelMixin,
@@ -86,8 +112,8 @@ class GenreViewSet(mixins.CreateModelMixin,
     search_fields = ['name', ]
     lookup_field = 'slug'
 
-    def retrieve(self):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    # def retrieve(self):
+    #     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def perform_create(self, serializer):
         genres_list = Genre.objects.all().values()
@@ -111,9 +137,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('name',)
-    # search_fields = ['name', ]
+    search_fields = ['name', ]
     lookup_field = 'slug'
 
     def retrieve(self, request, *args, **kwargs):
@@ -131,10 +157,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
             raise ValidationError('slug и name должны быть уникальными')
         serializer.save()
 
-    def destroy(self, request, *args, **kwargs):
-        genre = Category.objects.get(slug=self.kwargs.get('slug'))
-        self.perform_destroy(genre)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    # def destroy(self, request, *args, **kwargs):
+    #     genre = Category.objects.get(slug=self.kwargs.get('slug'))
+    #     self.perform_destroy(genre)
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserViewSet(viewsets.ModelViewSet):

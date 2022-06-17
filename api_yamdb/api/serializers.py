@@ -11,7 +11,6 @@ from users.models import User
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
     class Meta:
         fields = ('name', 'slug',)
         model = Category
@@ -31,7 +30,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug',)
+        exclude = ('id',)
         # validators = [
         #     UniqueTogetherValidator(
         #         queryset=Genre.objects.all(),
@@ -41,14 +40,16 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
-    genre = GenreSerializer(many=True)
+    category = serializers.SlugRelatedField(queryset=Category.objects.all(),
+                                            slug_field='slug')
+    genre = serializers.SlugRelatedField(queryset=Genre.objects.all(),
+                                         slug_field='slug', many=True)
     rating = SerializerMethodField()
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating', 'description',
-                  'genre', 'category')
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+                  'category')
         read_only_fields = ('id', 'rating')
         # validators = [
         #     UniqueTogetherValidator(

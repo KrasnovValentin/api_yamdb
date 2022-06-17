@@ -1,15 +1,15 @@
 from django.contrib import admin
 
-from reviews.models import Category, Genre, Title, TitleGenres
+from reviews.models import Category, Genre, Title #, TitleGenres
 
 
-class TitleGenres(admin.TabularInline):
-    model = TitleGenres
-    extra = 0
+# class TitleGenres(admin.TabularInline):
+#     model = TitleGenres
+#     extra = 0
 
 
 class TitleAdmin(admin.ModelAdmin):
-    inlines = (TitleGenres,)
+    #inlines = (TitleGenres,)
     list_display = ('pk',
                     'name',
                     'year',
