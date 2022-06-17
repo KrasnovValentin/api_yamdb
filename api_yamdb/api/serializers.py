@@ -2,10 +2,8 @@ from datetime import datetime
 
 from django.db.models import Avg
 from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField, SlugField
 
 from reviews.models import Title, Category, Genre, Review, Comment
-from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 from users.models import User
 
@@ -14,24 +12,12 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         exclude = ('id',)
         model = Category
-        # validators = [
-        #     UniqueTogetherValidator(
-        #         queryset=Category.objects.all(),
-        #         fields=('name', 'slug')
-        #     )
-        # ]
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         exclude = ('id',)
         model = Genre
-        # validators = [
-        #     UniqueTogetherValidator(
-        #         queryset=Genre.objects.all(),
-        #         fields=('name', 'slug')
-        #     ),
-        # ]
 
 
 class TitleSlugSerializer(serializers.ModelSerializer):
@@ -46,12 +32,6 @@ class TitleSlugSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year', 'description', 'genre',
                   'category')
         read_only_fields = ('rating',)
-        # validators = [
-        #     UniqueTogetherValidator(
-        #         queryset=Title.objects.all(),
-        #         fields=('name', 'genre', 'category'),
-        #     )
-        # ]
 
 
 class TitleSerializer(serializers.ModelSerializer):

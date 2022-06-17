@@ -20,13 +20,6 @@ class Genre(models.Model):
         return f'{self.name}'
 
 
-# class TitleGenres(models.Model):
-#     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True,
-#                               verbose_name='Жанр')
-#     title = models.ForeignKey('Title', on_delete=models.SET_NULL, null=True,
-#                               verbose_name='Название произведения')
-
-
 class Title(models.Model):
     name = models.CharField(max_length=200,
                             verbose_name='Название произведения')
@@ -44,7 +37,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        # through='TitleGenres',
         related_name='titles',
         blank=True,
         verbose_name='Жанр',
