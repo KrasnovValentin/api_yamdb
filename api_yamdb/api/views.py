@@ -122,8 +122,8 @@ class UserViewSet(viewsets.ModelViewSet):
         if user_username and username != data_of_me.data.get('username'):
             message = {'username': f'{username} уже зарегистрирован'}
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
-        if (data_of_me.data.get('role') == UserRole.USER
-                and 'role' in request.data):
+        if (data_of_me.data.get('role') == UserRole.USER and
+                'role' in request.data):
             message = {'role': 'user'}
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
@@ -198,7 +198,8 @@ def send_token(request):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """
-    Класс задает отображение, создание и редактирование отзывов на  произведения (модель title).
+    Класс задает отображение, создание и редактирование отзывов
+    на  произведения (модель title).
     """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
@@ -220,7 +221,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
-    Класс задает отображение, создание и редактирование отзывов на  произведения (модель review).
+    Класс задает отображение, создание и редактирование отзывов на
+    произведения (модель review).
     """
     serializer_class = CommentSerializer
     permission_classes = [
