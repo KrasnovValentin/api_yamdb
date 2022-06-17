@@ -23,7 +23,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         exclude = ('id',)
         model = Genre
@@ -44,7 +43,7 @@ class TitleSlugSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('name', 'year', 'description', 'genre',
+        fields = ('id', 'name', 'year', 'description', 'genre',
                   'category')
         read_only_fields = ('rating',)
         # validators = [
@@ -78,6 +77,7 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
         fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
                   'category')
+        read_only_fields = ('rating',)
 
 
 class UserSerializer(serializers.ModelSerializer):
