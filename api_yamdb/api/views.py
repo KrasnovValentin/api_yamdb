@@ -21,7 +21,8 @@ from .permissions import (IsAdmin, IsSuperUser,
                           IsAdminOrReadOnly)
 from .serializers import (SendConfirmationCodeSerializer, SendTokenSerializer,
                           UpdateSelfSerializer, UserSerializer,
-                          CommentSerializer, ReviewSerializer)
+                          CommentSerializer, ReviewSerializer,
+                          TitleSlugSerializer)
 
 from reviews.models import Title, Genre, Category, Review
 
@@ -29,7 +30,7 @@ from api.serializers import (TitleSerializer, GenreSerializer,
                              CategorySerializer)
 
 
-class TitleViewSet(viewsets.ModelViewSet, APIView):
+class TitleViewSet(viewsets.ModelViewSet):
     """
     Класс задает отображение, создание и редактирование
     записей о произведениях.
@@ -41,45 +42,26 @@ class TitleViewSet(viewsets.ModelViewSet, APIView):
     filterset_fields = ('name', 'year', 'category', 'genre')
     pagination_class = LimitOffsetPagination
 
-    # def create(self, request, *args, **kwargs):
-    #     print(f'self.request.data={request.data},{type(request.data)}')
-    #     catg = request.data.get('category')
-    #     print(f'type_catg={catg},{type(catg)}')
-    #     category_slug = catg.get('slug')
-    #     print(f'category_slug={category_slug}')
-    #     category = Category.objects.get(slug=category_slug)
-    #     genre_list = request.data.get('genre')
-    #     slug_list = [slg.get('slug') for slg in genre_list]
-    #     print(f'slug_list={slug_list}')
-    #     genre = Genre.objects.filter(slug__in=slug_list)
-    #     print(f'genre={genre}')
-    #     serializer = self.get_serializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save(
-    #         category=category,
-    #         genre=genre,
-    #     )
-    #     headers = self.get_success_headers(serializer.data)
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED,
-    #                     headers=headers)
-    #
-    # def perform_create(self, serializer):
-    #     pass
+    def get_serializer_class(self):
+        if self.action in ('create', 'partial_update'):
+            return TitleSlugSerializer
+        return TitleSerializer
 
     # def perform_create(self, serializer):
     #     categ = self.request.data['category']
+    #     print(f'self.request.data["category"]={self.request.data["category"]}')
     #     category_slug = categ.get('slug')
     #     print(category_slug)
     #     category = Category.objects.get(slug=category_slug)
-    #     genre_list = self.request.data['genre']
-    #     slug_list = [slg.get('slug') for slg in genre_list]
-    #     print(slug_list)
-    #     genre = Genre.objects.filter(slug__in=slug_list)
-    #     print(genre)
-    #     serializer.save(
-    #         category=category,
-    #         genre=genre,
-    #     )
+    # genre_list = self.request.data['genre']
+    # slug_list = [slg.get('slug') for slg in genre_list]
+    # print(slug_list)
+    # genre = Genre.objects.filter(slug__in=slug_list)
+    # print(genre)
+    # serializer.save(
+    #     category=category,
+    # genre=genre,
+    # )
 
     # def partial_update(self, request, *args, **kwargs):
     #     kwargs['partial'] = True
@@ -106,27 +88,24 @@ class GenreViewSet(mixins.CreateModelMixin,
     """
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)  #
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('name',)
     search_fields = ['name', ]
     lookup_field = 'slug'
 
-    # def retrieve(self):
-    #     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def perform_create(self, serializer):
-        genres_list = Genre.objects.all().values()
-        print(genres_list)
-        slug_list = [slg.get('slug') for slg in genres_list]
-        if self.request.data.get('slug') in slug_list:
-            raise ValidationError('slug должен быть уникальным')
-        serializer.save()
-
-    def destroy(self, request, *args, **kwargs):
-        genre = Genre.objects.get(slug=self.kwargs.get('slug'))
-        self.perform_destroy(genre)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    # def perform_create(self, serializer):
+    #     genres_list = Genre.objects.all().values()
+    #     print(genres_list)
+    #     slug_list = [slg.get('slug') for slg in genres_list]
+    #     if self.request.data.get('slug') in slug_list:
+    #         raise ValidationError('slug должен быть уникальным')
+    #     serializer.save()
+    #
+    # def destroy(self, request, *args, **kwargs):
+    #     genre = Genre.objects.get(slug=self.kwargs.get('slug'))
+    #     self.perform_destroy(genre)
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -148,14 +127,13 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def perform_create(self, serializer):
-        categ_list = Category.objects.all().values()
-        slug_list = [slg.get('slug') for slg in categ_list]
-        name_list = [nm.get('slug') for nm in categ_list]
-        if (self.request.data.get('slug') in slug_list or
-                self.request.data.get('name') in name_list):
-            raise ValidationError('slug и name должны быть уникальными')
-        serializer.save()
+    # def perform_create(self, serializer):
+    #     categ_list = Category.objects.all().values()
+    #     slug_list = [slg.get('slug') for slg in categ_list]
+    #     # name_list = [nm.get('slug') for nm in categ_list]
+    #     if self.request.data.get('slug') in slug_list:
+    #         raise ValidationError('slug  должен быть уникальным')
+    #     serializer.save()
 
     # def destroy(self, request, *args, **kwargs):
     #     genre = Category.objects.get(slug=self.kwargs.get('slug'))

@@ -13,7 +13,7 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=200,)
+    name = models.CharField(max_length=200, )
     slug = models.SlugField(verbose_name='URL slug', unique=True)
 
     def __str__(self):
@@ -44,7 +44,7 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        #through='TitleGenres',
+        # through='TitleGenres',
         related_name='titles',
         blank=True,
         verbose_name='Жанр',
@@ -84,7 +84,6 @@ class Review(models.Model):
                     MaxValueValidator(10,
                                       message='Значение должно быть '
                                               'меньше 10')])
-
 
     def __str__(self):
         return self.text[:WORD_COUNT]

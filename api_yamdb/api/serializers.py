@@ -12,7 +12,7 @@ from users.models import User
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('name', 'slug',)
+        exclude = ('id',)
         model = Category
         # validators = [
         #     UniqueTogetherValidator(
@@ -23,14 +23,10 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    # slug = SlugField(
-    #     max_length=100,
-    #     validators=[UniqueValidator(queryset=Genre.objects.all())]
-    # )
 
     class Meta:
-        model = Genre
         exclude = ('id',)
+        model = Genre
         # validators = [
         #     UniqueTogetherValidator(
         #         queryset=Genre.objects.all(),
@@ -39,18 +35,18 @@ class GenreSerializer(serializers.ModelSerializer):
         # ]
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleSlugSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(queryset=Category.objects.all(),
-                                            slug_field='slug')
+                                            slug_field='slug', )
     genre = serializers.SlugRelatedField(queryset=Genre.objects.all(),
-                                         slug_field='slug', many=True)
-    rating = SerializerMethodField()
+                                         slug_field='slug', many=True,
+                                         )
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+        fields = ('name', 'year', 'description', 'genre',
                   'category')
-        read_only_fields = ('id', 'rating')
+        read_only_fields = ('rating',)
         # validators = [
         #     UniqueTogetherValidator(
         #         queryset=Title.objects.all(),
@@ -58,11 +54,18 @@ class TitleSerializer(serializers.ModelSerializer):
         #     )
         # ]
 
-    def get_rating(self, obj):
-        return obj.reviews.aggregate(average=Avg('score'))['average']
 
-    # queryset = Title.objects.all().annotate(
-    #     Avg("reviews__score")
+class TitleSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+    rating = serializers.SerializerMethodField(method_name='get_rating')
+
+    def get_rating(self, title):
+        scores = Review.objects.filter(
+            title_id=title.id).aggregate(Avg('score'))
+        if scores:
+            return scores['score__avg']
+        return None
 
     def validate_year(self, year):
         if year > datetime.now().year:
@@ -70,6 +73,11 @@ class TitleSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 f'Нельзя вводить год больше {datetime.now().year}.')
         return year
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+                  'category')
 
 
 class UserSerializer(serializers.ModelSerializer):
