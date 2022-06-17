@@ -1,10 +1,8 @@
 from rest_framework import mixins
-from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
@@ -16,6 +14,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from api_yamdb.settings import EMAIL
 
 from users.models import User, UserRole
+from .filters import TitleFilter
 from .permissions import (IsAdmin, IsSuperUser,
                           AuthorOrAdminOrModeratorOrReadOnly,
                           IsAdminOrReadOnly)
@@ -38,45 +37,14 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'year', 'category', 'genre')
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_class = TitleFilter
     pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update'):
             return TitleSlugSerializer
         return TitleSerializer
-
-    # def perform_create(self, serializer):
-    #     categ = self.request.data['category']
-    #     print(f'self.request.data["category"]={self.request.data["category"]}')
-    #     category_slug = categ.get('slug')
-    #     print(category_slug)
-    #     category = Category.objects.get(slug=category_slug)
-    # genre_list = self.request.data['genre']
-    # slug_list = [slg.get('slug') for slg in genre_list]
-    # print(slug_list)
-    # genre = Genre.objects.filter(slug__in=slug_list)
-    # print(genre)
-    # serializer.save(
-    #     category=category,
-    # genre=genre,
-    # )
-
-    # def partial_update(self, request, *args, **kwargs):
-    #     kwargs['partial'] = True
-    #     partial = kwargs.pop('partial', False)
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance, data=request.data,
-    #                                      partial=partial)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save()
-    #     if getattr(instance, '_prefetched_objects_cache', None):
-    #         instance._prefetched_objects_cache = {}
-    #     return Response(serializer.data)
-    #
-    # def perform_update(self, serializer):
-    #     pass
 
 
 class GenreViewSet(mixins.CreateModelMixin,
@@ -93,19 +61,6 @@ class GenreViewSet(mixins.CreateModelMixin,
     filterset_fields = ('slug',)
     search_fields = ['name', ]
     lookup_field = 'slug'
-
-    # def perform_create(self, serializer):
-    #     genres_list = Genre.objects.all().values()
-    #     print(genres_list)
-    #     slug_list = [slg.get('slug') for slg in genres_list]
-    #     if self.request.data.get('slug') in slug_list:
-    #         raise ValidationError('slug должен быть уникальным')
-    #     serializer.save()
-    #
-    # def destroy(self, request, *args, **kwargs):
-    #     genre = Genre.objects.get(slug=self.kwargs.get('slug'))
-    #     self.perform_destroy(genre)
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -126,19 +81,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    # def perform_create(self, serializer):
-    #     categ_list = Category.objects.all().values()
-    #     slug_list = [slg.get('slug') for slg in categ_list]
-    #     # name_list = [nm.get('slug') for nm in categ_list]
-    #     if self.request.data.get('slug') in slug_list:
-    #         raise ValidationError('slug  должен быть уникальным')
-    #     serializer.save()
-
-    # def destroy(self, request, *args, **kwargs):
-    #     genre = Category.objects.get(slug=self.kwargs.get('slug'))
-    #     self.perform_destroy(genre)
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserViewSet(viewsets.ModelViewSet):
