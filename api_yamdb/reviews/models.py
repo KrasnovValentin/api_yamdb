@@ -78,11 +78,13 @@ class Review(models.Model):
 
     score = models.IntegerField(
         verbose_name='Рейтинг',
+
         validators=[MinValueValidator(1, message='Значение '
                                                  'должно быть больше 1'),
                     MaxValueValidator(10,
                                       message='Значение должно быть '
                                               'меньше 10')])
+
 
     def __str__(self):
         return self.text[:WORD_COUNT]
