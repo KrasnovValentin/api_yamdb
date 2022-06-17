@@ -122,8 +122,8 @@ class UserViewSet(viewsets.ModelViewSet):
         if user_username and username != data_of_me.data.get('username'):
             message = {'username': f'{username} уже зарегистрирован'}
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
-        if (data_of_me.data.get('role') == UserRole.USER and
-                'role' in request.data):
+        if (data_of_me.data.get('role') == UserRole.USER
+                and 'role' in request.data):
             message = {'role': 'user'}
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
