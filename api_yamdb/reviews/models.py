@@ -6,25 +6,25 @@ from api_yamdb.settings import WORD_COUNT
 
 class Category(models.Model):
     name = models.CharField(max_length=200)
-    slug = models.SlugField()
+    slug = models.SlugField(verbose_name='URL slug', unique=True)
 
     def __str__(self):
-        return f'{self.name}:{self.slug}'
+        return f'{self.name}'
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=200, blank=True)
-    slug = models.SlugField(unique=True)
+    name = models.CharField(max_length=200, )
+    slug = models.SlugField(verbose_name='URL slug', unique=True)
 
     def __str__(self):
-        return f'{self.name}:{self.slug}'
+        return f'{self.name}'
 
 
-class TitleGenres(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True,
-                              verbose_name='Жанр')
-    title = models.ForeignKey('Title', on_delete=models.SET_NULL, null=True,
-                              verbose_name='Название произведения')
+# class TitleGenres(models.Model):
+#     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True,
+#                               verbose_name='Жанр')
+#     title = models.ForeignKey('Title', on_delete=models.SET_NULL, null=True,
+#                               verbose_name='Название произведения')
 
 
 class Title(models.Model):
@@ -44,7 +44,7 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        through='TitleGenres',
+        # through='TitleGenres',
         related_name='titles',
         blank=True,
         verbose_name='Жанр',
@@ -78,9 +78,12 @@ class Review(models.Model):
 
     score = models.IntegerField(
         verbose_name='Рейтинг',
-        validators=[
-            MinValueValidator(1, message='Значение должно быть больше 1'),
-            MaxValueValidator(10, message='Значение должно быть меньше 10')])
+
+        validators=[MinValueValidator(1, message='Значение '
+                                                 'должно быть больше 1'),
+                    MaxValueValidator(10,
+                                      message='Значение должно быть '
+                                              'меньше 10')])
 
     def __str__(self):
         return self.text[:WORD_COUNT]
@@ -100,7 +103,7 @@ class Comment(models.Model):
         verbose_name='Текст комментария',
         help_text='Введите текст комметария'
     )
-    pud_date = models.DateTimeField(
+    pub_date = models.DateTimeField(
         auto_now_add=True, verbose_name='Дата комментария')
     author = models.ForeignKey(
         User,

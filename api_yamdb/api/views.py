@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions, filters, mixins, status
+from rest_framework import mixins
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
@@ -14,91 +15,132 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api_yamdb.settings import EMAIL
 
-from reviews.models import Review, Comment, Title
 from users.models import User, UserRole
-from .permissions import (IsAdmin, IsSuperUser, AuthorOrAdminOrModeratorOrReadOnly)
+from .permissions import (IsAdmin, IsSuperUser,
+                          AuthorOrAdminOrModeratorOrReadOnly,
+                          IsAdminOrReadOnly)
 from .serializers import (SendConfirmationCodeSerializer, SendTokenSerializer,
-                          UpdateSelfSerializer, UserSerializer, 
-                          CommentSerializer, ReviewSerializer)
+                          UpdateSelfSerializer, UserSerializer,
+                          CommentSerializer, ReviewSerializer,
+                          TitleSlugSerializer)
 
-from reviews.models import Title, Genre, Category
+from reviews.models import Title, Genre, Category, Review
 
 from api.serializers import (TitleSerializer, GenreSerializer,
                              CategorySerializer)
 
 
-class TitleViewSet(viewsets.ModelViewSet, APIView):
+class TitleViewSet(viewsets.ModelViewSet):
+    """
+    Класс задает отображение, создание и редактирование
+    записей о произведениях.
+    """
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    # permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'year', 'category', 'genre')
     pagination_class = LimitOffsetPagination
 
-    def perform_create(self, serializer):
-        categ = self.request.data['category']
-        category_slug = categ.get('slug')
-        category = get_object_or_404(Category, slug=category_slug)
-        genre_list = self.request.data['genre']
-        slug_list = [slg.get('slug') for slg in genre_list]
-        genres = Genre.objects.filter(slug__in=slug_list)
-        serializer.save(
-            category=category,
-            genre=genres,
-        )
+    def get_serializer_class(self):
+        if self.action in ('create', 'partial_update'):
+            return TitleSlugSerializer
+        return TitleSerializer
 
-    def partial_update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data,
-                                         partial=partial)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        if getattr(instance, '_prefetched_objects_cache', None):
-            instance._prefetched_objects_cache = {}
-        return Response(serializer.data)
+    # def perform_create(self, serializer):
+    #     categ = self.request.data['category']
+    #     print(f'self.request.data["category"]={self.request.data["category"]}')
+    #     category_slug = categ.get('slug')
+    #     print(category_slug)
+    #     category = Category.objects.get(slug=category_slug)
+    # genre_list = self.request.data['genre']
+    # slug_list = [slg.get('slug') for slg in genre_list]
+    # print(slug_list)
+    # genre = Genre.objects.filter(slug__in=slug_list)
+    # print(genre)
+    # serializer.save(
+    #     category=category,
+    # genre=genre,
+    # )
 
-    def perform_update(self, serializer):
-        pass
+    # def partial_update(self, request, *args, **kwargs):
+    #     kwargs['partial'] = True
+    #     partial = kwargs.pop('partial', False)
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance, data=request.data,
+    #                                      partial=partial)
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+    #     if getattr(instance, '_prefetched_objects_cache', None):
+    #         instance._prefetched_objects_cache = {}
+    #     return Response(serializer.data)
+    #
+    # def perform_update(self, serializer):
+    #     pass
 
 
 class GenreViewSet(mixins.CreateModelMixin,
                    mixins.ListModelMixin,
                    GenericViewSet,
-                   mixins.DestroyModelMixin,):
+                   mixins.DestroyModelMixin, ):
+    """
+    Класс задает отображение, создание и редактирование жанров произведений.
+    """
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('slug',)
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ('name',)
+    search_fields = ['name', ]
+    lookup_field = 'slug'
 
-    # def delete(self, request):
-    #     slug = self.kwargs.get('slug')
-    #     genre = Genre.objects.get(slug=slug)
-    #     genre.delete()
-    #     serializer = GenreSerializer(genre, data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
+    # def perform_create(self, serializer):
+    #     genres_list = Genre.objects.all().values()
+    #     print(genres_list)
+    #     slug_list = [slg.get('slug') for slg in genres_list]
+    #     if self.request.data.get('slug') in slug_list:
+    #         raise ValidationError('slug должен быть уникальным')
+    #     serializer.save()
+    #
+    # def destroy(self, request, *args, **kwargs):
+    #     genre = Genre.objects.get(slug=self.kwargs.get('slug'))
+    #     self.perform_destroy(genre)
     #     return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def destroy(self, request, *args, **kwargs):
-        slug = self.kwargs.get('slug')
-        genre = Genre.objects.get(slug=slug)
-        lookup_field = ('slug',)
-        # instance = self.get_object()
-        self.perform_destroy(genre)
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
+    """
+    Класс задает отображение, создание и редактирование
+    произведений («Фильмы», «Книги», «Музыка»).
+    """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    # permission_classes = (AuthorOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('slug',)
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ('name',)
+    search_fields = ['name', ]
+    lookup_field = 'slug'
 
-    
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    # def perform_create(self, serializer):
+    #     categ_list = Category.objects.all().values()
+    #     slug_list = [slg.get('slug') for slg in categ_list]
+    #     # name_list = [nm.get('slug') for nm in categ_list]
+    #     if self.request.data.get('slug') in slug_list:
+    #         raise ValidationError('slug  должен быть уникальным')
+    #     serializer.save()
+
+    # def destroy(self, request, *args, **kwargs):
+    #     genre = Category.objects.get(slug=self.kwargs.get('slug'))
+    #     self.perform_destroy(genre)
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """Класс пользователей."""
     queryset = User.objects.all()
@@ -142,6 +184,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(serializer.data)
+
 
 def send_email(email):
     user = get_object_or_404(User, email=email)
@@ -227,8 +270,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, id=title_id)
         serializer.save(author=self.request.user, title=title)
 
-class CommentViewSet(viewsets.ModelViewSet):
 
+class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [
         AuthorOrAdminOrModeratorOrReadOnly
