@@ -5,7 +5,7 @@ from api_yamdb.settings import WORD_COUNT
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, verbose_name='Категория')
     slug = models.SlugField(verbose_name='URL slug', unique=True)
 
     def __str__(self):
@@ -18,7 +18,7 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=200, )
+    name = models.CharField(max_length=200, verbose_name='Жанр')
     slug = models.SlugField(verbose_name='URL slug', unique=True)
 
     def __str__(self):
@@ -81,7 +81,7 @@ class Review(models.Model):
                               help_text='Произведение, к '
                                         'которому относится отзыв')
 
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         verbose_name='Рейтинг',
 
         validators=[MinValueValidator(1, message='Значение '

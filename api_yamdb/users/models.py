@@ -28,10 +28,11 @@ class User(AbstractUser):
     first_name = models.TextField(max_length=150, blank=True)
     last_name = models.TextField(max_length=150, blank=True)
     bio = models.TextField(blank=True, verbose_name='Биография')
-    role = models.TextField(
+    role = models.CharField(
         choices=UserRole.choices,
         default=UserRole.USER,
-        verbose_name='Пользовательская роль'
+        verbose_name='Пользовательская роль',
+        max_length=100,
     )
     confirmation_code = models.TextField(default='000000')
 

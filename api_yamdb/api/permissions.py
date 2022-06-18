@@ -36,6 +36,9 @@ class IsAdminOrReadOnly(BasePermission):
 
 
 class IsAdmin(BasePermission):
+    """
+    Права доступа только для админа.
+    """
     def has_permission(self, request, view):
         result = request.user.is_authenticated and (
             request.user.is_staff or request.user.role == UserRole.ADMIN)
@@ -43,18 +46,27 @@ class IsAdmin(BasePermission):
 
 
 class IsModerator(BasePermission):
+    """
+    Права доступа только для модератора.
+    """
     def has_permission(self, request, view):
         return (request.user.is_authenticated
                 and request.user.role == UserRole.MODERATOR)
 
 
 class IsUser(BasePermission):
+    """
+    Права доступа только для аутентифицированного пользователя.
+    """
     def has_permission(self, request, view):
         return (request.user.is_authenticated
                 and request.user.role == UserRole.USER)
 
 
 class IsSuperUser(BasePermission):
+    """
+    Права доступа только для суперпользователя, имеющего все права админа.
+    """
     def has_permission(self, request, view):
         return (request.user.is_authenticated
                 and request.user.is_superuser

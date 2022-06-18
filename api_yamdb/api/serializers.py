@@ -50,7 +50,6 @@ class TitleSerializer(serializers.ModelSerializer):
 
     def validate_year(self, year):
         if year > datetime.now().year:
-            from rest_framework.exceptions import ValidationError
             raise ValidationError(
                 f'Нельзя вводить год больше {datetime.now().year}.')
         return year

@@ -15,6 +15,7 @@ from api_yamdb.settings import EMAIL
 
 from users.models import User, UserRole
 from .filters import TitleFilter
+from .mixins import CategModelViewSet
 from .permissions import (IsAdmin, IsSuperUser,
                           AuthorOrAdminOrModeratorOrReadOnly,
                           IsAdminOrReadOnly)
@@ -49,8 +50,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class GenreViewSet(mixins.CreateModelMixin,
                    mixins.ListModelMixin,
-                   GenericViewSet,
-                   mixins.DestroyModelMixin, ):
+                   mixins.DestroyModelMixin,
+                   GenericViewSet, ):
     """
     Класс задает отображение, создание и редактирование жанров произведений.
     """
@@ -64,7 +65,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     pagination_class = LimitOffsetPagination
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CategModelViewSet):
     """
     Класс задает отображение, создание и редактирование
     произведений («Фильмы», «Книги», «Музыка»).
@@ -77,12 +78,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ['name', ]
     lookup_field = 'slug'
     pagination_class = LimitOffsetPagination
-
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -111,15 +106,15 @@ class UserViewSet(viewsets.ModelViewSet):
 
         email = serializer.validated_data.get('email')
         username = serializer.validated_data.get('username')
-        user_email = User.objects.filter(email=email).exists()
-        user_username = User.objects.filter(username=username).exists()
+        user_email_bool = User.objects.filter(email=email).exists()
+        user_username_bool = User.objects.filter(username=username).exists()
 
         data_of_me = self.get_serializer(request.user, many=False)
 
-        if user_email and email != data_of_me.data.get('email'):
+        if user_email_bool and email != data_of_me.data.get('email'):
             message = {'email': f'{email} уже зарегистрирован'}
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
-        if user_username and username != data_of_me.data.get('username'):
+        if user_username_bool and username != data_of_me.data.get('username'):
             message = {'username': f'{username} уже зарегистрирован'}
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
         if (data_of_me.data.get('role') == UserRole.USER
@@ -150,7 +145,7 @@ def send_email(email):
 def send_confirmation_code(request):
     """
     Функция обрабатывает POST-запрос для регистрации нового пользователя и
-    получаения кода подтверждения, который необходим для получения JWT-токена.
+    получения кода подтверждения, который необходим для получения JWT-токена.
     На вход подается 'username' и 'email', а в ответ происходит отправка
     на почту письма с кодом подтверждения.
     """
@@ -201,7 +196,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     Класс задает отображение, создание и редактирование отзывов
     на  произведения (модель title).
     """
-    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [
         AuthorOrAdminOrModeratorOrReadOnly
