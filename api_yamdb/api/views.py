@@ -1,7 +1,9 @@
+from rest_framework import mixins
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import filters, status, viewsets
@@ -13,7 +15,6 @@ from api_yamdb.settings import EMAIL
 
 from users.models import User, UserRole
 from .filters import TitleFilter
-from .mixins import GenreCategModelViewSet
 from .permissions import (IsAdmin, IsSuperUser,
                           AuthorOrAdminOrModeratorOrReadOnly,
                           IsAdminOrReadOnly)
@@ -46,7 +47,10 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class GenreViewSet(GenreCategModelViewSet):
+class GenreViewSet(mixins.CreateModelMixin,
+                   mixins.ListModelMixin,
+                   GenericViewSet,
+                   mixins.DestroyModelMixin, ):
     """
     Класс задает отображение, создание и редактирование жанров произведений.
     """
@@ -57,10 +61,9 @@ class GenreViewSet(GenreCategModelViewSet):
     filterset_fields = ('slug',)
     search_fields = ['name', ]
     lookup_field = 'slug'
-    pagination_class = LimitOffsetPagination
 
 
-class CategoryViewSet(GenreCategModelViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     """
     Класс задает отображение, создание и редактирование
     произведений («Фильмы», «Книги», «Музыка»).
@@ -72,7 +75,12 @@ class CategoryViewSet(GenreCategModelViewSet):
     filterset_fields = ('name',)
     search_fields = ['name', ]
     lookup_field = 'slug'
-    pagination_class = LimitOffsetPagination
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -101,15 +109,15 @@ class UserViewSet(viewsets.ModelViewSet):
 
         email = serializer.validated_data.get('email')
         username = serializer.validated_data.get('username')
-        user_email_bool = User.objects.filter(email=email).exists()
-        user_username_bool = User.objects.filter(username=username).exists()
+        user_email = User.objects.filter(email=email).exists()
+        user_username = User.objects.filter(username=username).exists()
 
         data_of_me = self.get_serializer(request.user, many=False)
 
-        if user_email_bool and email != data_of_me.data.get('email'):
+        if user_email and email != data_of_me.data.get('email'):
             message = {'email': f'{email} уже зарегистрирован'}
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
-        if user_username_bool and username != data_of_me.data.get('username'):
+        if user_username and username != data_of_me.data.get('username'):
             message = {'username': f'{username} уже зарегистрирован'}
             return Response(message, status=status.HTTP_400_BAD_REQUEST)
         if (data_of_me.data.get('role') == UserRole.USER
@@ -140,7 +148,7 @@ def send_email(email):
 def send_confirmation_code(request):
     """
     Функция обрабатывает POST-запрос для регистрации нового пользователя и
-    получения кода подтверждения, который необходим для получения JWT-токена.
+    получаения кода подтверждения, который необходим для получения JWT-токена.
     На вход подается 'username' и 'email', а в ответ происходит отправка
     на почту письма с кодом подтверждения.
     """
@@ -188,9 +196,9 @@ def send_token(request):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """
-    Класс задает отображение, создание и редактирование отзывов
-    на  произведения (модель title).
+    Класс задает отображение, создание и редактирование отзывов на  произведения (модель title).
     """
+    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [
         AuthorOrAdminOrModeratorOrReadOnly
@@ -210,8 +218,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
-    Класс задает отображение, создание и редактирование отзывов на
-    произведения (модель review).
+    Класс задает отображение, создание и редактирование отзывов на  произведения (модель revie.
     """
     serializer_class = CommentSerializer
     permission_classes = [
