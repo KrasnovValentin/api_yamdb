@@ -15,7 +15,7 @@ from api_yamdb.settings import EMAIL
 
 from users.models import User, UserRole
 from .filters import TitleFilter
-from .mixins import CategModelViewSet
+from .mixins import GenreCategModelViewSet
 from .permissions import (IsAdmin, IsSuperUser,
                           AuthorOrAdminOrModeratorOrReadOnly,
                           IsAdminOrReadOnly)
@@ -48,10 +48,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.DestroyModelMixin,
-                   GenericViewSet, ):
+class GenreViewSet(GenreCategModelViewSet):
     """
     Класс задает отображение, создание и редактирование жанров произведений.
     """
@@ -65,7 +62,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     pagination_class = LimitOffsetPagination
 
 
-class CategoryViewSet(CategModelViewSet):
+class CategoryViewSet(GenreCategModelViewSet):
     """
     Класс задает отображение, создание и редактирование
     произведений («Фильмы», «Книги», «Музыка»).
