@@ -1,9 +1,7 @@
-from rest_framework import mixins
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import filters, status, viewsets
@@ -15,6 +13,7 @@ from api_yamdb.settings import EMAIL
 
 from users.models import User, UserRole
 from .filters import TitleFilter
+from .mixins import GenreCategModelViewSet
 from .permissions import (IsAdmin, IsSuperUser,
                           AuthorOrAdminOrModeratorOrReadOnly,
                           IsAdminOrReadOnly)
@@ -47,10 +46,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   GenericViewSet,
-                   mixins.DestroyModelMixin, ):
+class GenreViewSet(GenreCategModelViewSet):
     """
     Класс задает отображение, создание и редактирование жанров произведений.
     """
@@ -63,7 +59,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     lookup_field = 'slug'
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(GenreCategModelViewSet):
     """
     Класс задает отображение, создание и редактирование
     произведений («Фильмы», «Книги», «Музыка»).
@@ -75,12 +71,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filterset_fields = ('name',)
     search_fields = ['name', ]
     lookup_field = 'slug'
-
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class UserViewSet(viewsets.ModelViewSet):
