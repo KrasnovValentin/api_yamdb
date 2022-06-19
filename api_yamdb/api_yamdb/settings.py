@@ -132,4 +132,4 @@ SIMPLE_JWT = {
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-WORD_COUNT = 15
+CHAR_COUNT = 15

@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from users.models import User
-from api_yamdb.settings import WORD_COUNT
+from api_yamdb.settings import CHAR_COUNT
 
 
 class Category(models.Model):
@@ -72,14 +72,15 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Автор отзыва')
-    title = models.ForeignKey(Title,
-                              blank=True,
-                              null=True,
-                              on_delete=models.SET_NULL,
-                              related_name='reviews',
-                              verbose_name='Произведение',
-                              help_text='Произведение, к '
-                                        'которому относится отзыв')
+    title = models.ForeignKey(
+        Title,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='reviews',
+        verbose_name='Произведение',
+        help_text='Произведение, к '
+                  'которому относится отзыв')
 
     score = models.PositiveSmallIntegerField(
         verbose_name='Рейтинг',
@@ -91,7 +92,7 @@ class Review(models.Model):
                                               'меньше 10')])
 
     def __str__(self):
-        return self.text[:WORD_COUNT]
+        return self.text[:CHAR_COUNT]
 
     class Meta:
         verbose_name = 'Отзыв'
