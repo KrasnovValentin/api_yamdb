@@ -109,3 +109,6 @@ http://localhost/api/v1/users/me/ и заполняет поля в своём �
    **(PATCH-запрос)** частичное обновление отзыва по id
    * http://localhost/api/v1/titles/{title_id}/reviews/{review_id}/ - 
    **(DELETE-запрос)** Удаление отзыва по id
+   
+   ---
+   #### Стек технологий: Python, Django REST framework
